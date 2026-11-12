@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<script>
+/* =====================================================================
+   KẾT NỐI GOOGLE SHEET – chỉ sửa 1 dòng dưới đây (chỉ làm 1 lần):
+   dán link Web App của Apps Script vào giữa 2 dấu nháy kép, ví dụ:
+   API_URL: "https://script.google.com/macros/s/AKfy.../exec"
+   Để trống thì bài giảng dùng câu hỏi có sẵn, phần thi chỉ ở chế độ luyện tập.
+   ===================================================================== */
+window.MD14_CONFIG = { API_URL: "https://script.google.com/macros/s/AKfycbyvHynHnp-btNTBeP2hFNH9a7E2lGfLj--mDi3s985UEGzKGIfabwO9iJ7uOxoP2L0J/exec" };
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#10263a">
+<title>Thi đánh giá – MĐ 14 Máy điện</title>
+<meta name="author" content="Huỳnh Hào Kiệt - Trường Trung cấp nghề Diên Khánh">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#eef3f6; --paper2:#f8fafb; --grid:rgba(19,41,61,.055);
+  --ink:#13293d; --ink2:#3d5568; --steel:#6b7f8f; --line:#cfdbe3;
+  --copper:#bf5f24; --copper2:#e3925a; --copper3:#fbe3d1;
+  --flux:#0a8ea5; --flux2:#bfe9f0; --navy:#10263a; --navy2:#173550;
+  --pA:#d93636; --pB:#2b9348; --pC:#1f6fd1; --amber:#e8a200;
+  --ok:#2b9348; --bad:#d93636; --warn:#f2a900;
+  --f:"Be Vietnam Pro","Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
+  --fs:"Noto Serif",Cambria,"Times New Roman",Georgia,serif;
+  --dur:820ms; --ease:cubic-bezier(.62,.04,.3,1);
+}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:#eef3f6;font-family:var(--f);-webkit-font-smoothing:antialiased}
+@keyframes fadeIn{from{opacity:0}}@keyframes pop{from{transform:perspective(1200px) rotateX(-18deg) scale(.92);opacity:0}}@keyframes blink{50%{opacity:.15}}@keyframes spin{to{transform:rotate(360deg)}}
+/* =================== TRANG THI =================== */
+#exam{position:fixed;inset:0;z-index:300;display:none;flex-direction:column;font-family:var(--f);color:var(--ink);background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:32px 32px;font-size:17px;line-height:1.5}
+#exam.open{display:flex}
+#exam *{box-sizing:border-box}
+#exam button{font-family:inherit}
+.ex-bar{flex:none;display:flex;align-items:center;gap:12px;padding:8px 14px;background:var(--navy);color:#e8f1f6;min-height:58px}
+.ex-brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.ex-brand div{display:flex;flex-direction:column;min-width:0}
+.ex-brand b{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ex-brand span{font-size:11.5px;color:#a9c2d3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ex-clock{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;background:rgba(255,255,255,.1);padding:4px 14px;border-radius:10px;letter-spacing:1px}
+.ex-clock.low{background:var(--bad);color:#fff;animation:blink 1s infinite}
+.ex-x{width:42px;height:42px;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#fff;font-size:28px;line-height:1;cursor:pointer}
+.ex-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 12px 90px}
+.ex-wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.ex-card{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:20px 18px;box-shadow:0 2px 0 var(--line)}
+.ex-card h1{font-size:26px;line-height:1.2;margin:0 0 4px}
+.ex-card h2{font-size:22px;margin:8px 0}
+.ex-card h3{font-size:19px;margin:0 0 8px}
+.ex-sub{color:var(--ink2);margin:0 0 14px}
+.ex-small{font-size:14px;color:var(--steel)}
+.ex-f2{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:6px}
+.ex-start label,.ex-pass{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:15px}
+.ex-start input{font:inherit;font-size:17px;font-weight:500;padding:12px 14px;border:2px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);width:100%}
+.ex-start input:focus{outline:none;border-color:var(--flux)}
+.ex-lbl{font-weight:700;font-size:15px;margin:14px 0 6px}
+.ex-list{display:flex;flex-direction:column;gap:10px}
+.ex-opt{position:relative;text-align:left;border:2px solid var(--line);background:#fff;border-radius:12px;padding:12px 14px 12px 50px;cursor:pointer;display:flex;flex-direction:column;gap:2px;color:var(--ink);font-size:16px}
+.ex-opt::before{content:"";position:absolute;left:14px;top:50%;margin-top:-12px;width:24px;height:24px;border-radius:50%;border:3px solid var(--line)}
+.ex-opt.on{border-color:var(--copper);background:#fff7f1}
+.ex-opt.on::before{border-color:var(--copper);background:radial-gradient(circle,var(--copper) 0 45%,transparent 50%)}
+.ex-opt span{font-size:14px;color:var(--ink2)}
+.ex-opt i{position:absolute;right:12px;top:12px;font-style:normal;font-size:12px;font-weight:700;padding:2px 10px;border-radius:20px}
+.ex-opt i.op{background:#dff3e5;color:#1d6b35}.ex-opt i.cl{background:#eef1f3;color:var(--steel)}
+.ex-opt:disabled{opacity:.55;cursor:not-allowed}
+.ex-opt b{padding-right:74px}
+.ex-pass{margin-top:12px}
+.ex-rules{margin:16px 0 8px;padding-left:20px;color:var(--ink2);font-size:15px}
+.ex-rules li{margin-bottom:4px}
+.ex-err{color:var(--bad);font-weight:700;min-height:22px;margin:6px 0}
+.ex-note{border-radius:10px;padding:10px 14px;font-size:15px;margin:8px 0;background:#e2f3f6;border-left:6px solid var(--flux)}
+.ex-note.warn{background:#fff3d1;border-left-color:var(--warn)}
+.ex-note.bad{background:#fde4e4;border-left-color:var(--bad)}
+.ex-note.ok{background:#dff3e5;border-left-color:var(--ok)}
+.ex-wait{color:var(--steel);padding:10px 0}
+.ex-link{border:0;background:none;color:var(--flux);font-weight:700;text-decoration:underline;cursor:pointer;font-size:inherit;padding:0}
+.ex-btn{appearance:none;border:2px solid var(--ink);background:#fff;color:var(--ink);font-size:16px;font-weight:700;padding:10px 18px;border-radius:10px;cursor:pointer;line-height:1.2;min-height:46px}
+.ex-btn:disabled{opacity:.45;cursor:default}
+.ex-btn.pri{background:var(--copper);border-color:var(--copper);color:#fff}
+.ex-btn.warn{background:var(--bad);border-color:var(--bad);color:#fff}
+.ex-btn.big{width:100%;font-size:18px;padding:14px;margin-top:6px}
+.ex-btn.wide{width:100%}
+.ex-row{display:flex;gap:10px;flex-wrap:wrap}.ex-row .ex-btn{flex:1}.ex-row.c{justify-content:center;margin-top:14px}
+.bad{color:var(--bad)}
+/* làm bài */
+.ex-run{max-width:1200px;margin:0 auto}
+.ex-who{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.ex-who>div{flex:1;min-width:0;font-size:15px}
+.ex-who span{display:block;font-size:13px;color:var(--steel);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ex-who .ex-sub-btn{flex:none}
+.ex-prog{height:6px;background:#dde6ec;border-radius:6px;overflow:hidden;margin-bottom:12px}
+.ex-prog i{display:block;height:100%;width:0;background:var(--ok);transition:width .4s}
+.ex-main{display:grid;grid-template-columns:1fr;gap:16px}
+.ex-q{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:16px}
+.ex-q.in{animation:exIn .45s cubic-bezier(.2,.75,.25,1)}
+@keyframes exIn{from{opacity:0;transform:perspective(900px) rotateY(-14deg) translateX(30px)}to{opacity:1;transform:none}}
+.ex-qn{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:800;color:var(--copper);margin-bottom:8px;font-size:15px}
+.ex-flag{border:1.5px solid var(--line);background:#fff;border-radius:20px;font-size:13px;font-weight:700;padding:5px 12px;cursor:pointer;color:var(--ink2)}
+.ex-flag.on{background:#fff3d1;border-color:var(--warn);color:#8a5a00}
+.ex-qt{font-size:19px;font-weight:700;line-height:1.4;margin-bottom:14px}
+.ex-img{display:block;max-width:100%;max-height:300px;margin:0 auto 14px;border-radius:10px}
+.ex-os{display:flex;flex-direction:column;gap:10px}
+.ex-o{display:flex;align-items:center;gap:12px;text-align:left;border:2px solid var(--line);background:#fff;border-radius:12px;padding:12px 14px;font-size:17px;color:var(--ink);cursor:pointer;min-height:56px;transition:border-color .2s,background .2s,transform .15s}
+.ex-o:active{transform:scale(.99)}
+.ex-o b{flex:none;width:34px;height:34px;border-radius:50%;background:#eef3f6;display:flex;align-items:center;justify-content:center;font-size:16px}
+.ex-o.on{border-color:var(--flux);background:#e2f3f6}
+.ex-o.on b{background:var(--flux);color:#fff}
+.ex-nav{display:flex;gap:10px;margin-top:16px}.ex-nav .ex-btn{flex:1}
+.ex-pal{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:14px}
+.ex-pal-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:15px}
+.ex-pal-h span{color:var(--steel);font-size:14px}
+.ex-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px;margin-bottom:12px}
+.ex-grid button{height:44px;border-radius:8px;border:2px solid var(--line);background:#fff;font-weight:800;font-size:15px;color:var(--ink);cursor:pointer;position:relative}
+.ex-grid button.a{background:var(--ok);border-color:var(--ok);color:#fff}
+.ex-grid button.f::after{content:"";position:absolute;right:3px;top:3px;width:9px;height:9px;border-radius:50%;background:var(--warn)}
+.ex-grid button.cur{outline:3px solid var(--copper);outline-offset:1px}
+.ex-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink2);margin-bottom:12px}
+.ex-legend i{display:inline-block;width:12px;height:12px;border-radius:3px;border:2px solid var(--line);vertical-align:-2px;margin-right:4px}
+.ex-legend i.a{background:var(--ok);border-color:var(--ok)}.ex-legend i.f{background:var(--warn);border-color:var(--warn);border-radius:50%}
+.ex-bnav{position:fixed;left:0;right:0;bottom:0;display:flex;gap:8px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:rgba(255,255,255,.97);border-top:1px solid var(--line);z-index:5}
+.ex-bnav .ex-btn{flex:1;padding:8px 6px;font-size:15px}
+.ex-bnav .ex-palbtn{flex:1.4;border-color:var(--flux);color:var(--flux)}
+.ex-run .ex-pal{display:none}
+.ex-run .ex-pal.show{display:block;position:fixed;left:8px;right:8px;bottom:72px;z-index:6;max-height:60vh;overflow:auto;box-shadow:0 -10px 40px rgba(0,0,0,.25)}
+.ex-run .ex-who .ex-sub-btn{padding:8px 14px;min-height:40px}
+.ex-modal{position:fixed;inset:0;background:rgba(9,21,33,.6);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+.ex-modal[hidden]{display:none}
+.ex-mbox{background:#fff;border-radius:16px;padding:22px 20px;max-width:440px;width:100%;animation:pop .3s}
+.ex-toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:12px;font-size:15px;z-index:30;max-width:92%;text-align:center}
+.ex-toast[hidden]{display:none}
+.ex-center{text-align:center;padding:36px 20px}
+.ex-spin{width:54px;height:54px;border-radius:50%;border:6px solid #dde6ec;border-top-color:var(--copper);margin:0 auto 14px;animation:spin 1s linear infinite}
+/* kết quả */
+.ex-res{text-align:center}
+.ex-ring{--p:0;width:170px;height:170px;border-radius:50%;margin:6px auto 8px;background:conic-gradient(var(--copper) calc(var(--p)*1%),#e3eaef 0);display:flex;align-items:center;justify-content:center;animation:pop .6s}
+.ex-ring>div{width:136px;height:136px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ex-ring b{font-size:46px;line-height:1;color:var(--ink)}.ex-ring span{font-size:14px;color:var(--steel)}
+.ex-stats{display:flex;justify-content:center;gap:28px;margin:10px 0}
+.ex-stats b{display:block;font-size:20px}.ex-stats span{font-size:13px;color:var(--steel)}
+.ex-rh{margin-bottom:12px}
+.ex-rv{border-top:1.5px solid var(--line);padding:12px 0}
+.ex-rv .ex-rq{font-weight:600;margin-bottom:6px}
+.ex-rv ul{list-style:none;margin:0;padding:0;font-size:15.5px}
+.ex-rv li{padding:5px 10px;border-radius:8px;margin:3px 0}
+.ex-rv li.k{background:#dff3e5;color:#1d6b35;font-weight:700}
+.ex-rv li.y{background:#fde4e4;color:#9b1c1c;text-decoration:line-through}
+.ex-rv em{font-style:normal;font-size:13px}
+.ex-rv.no .ex-rq::before{content:"✗ ";color:var(--bad)}.ex-rv.ok .ex-rq::before{content:"✓ ";color:var(--ok)}
+.ex-ex{font-size:14.5px;color:var(--ink2);background:#f5f8fa;border-left:4px solid var(--copper2);padding:8px 12px;border-radius:4px 8px 8px 4px;margin:8px 0 0}
+@media (min-width:760px){
+  #exam{font-size:18px}
+  .ex-body{padding:24px 24px 40px}
+  .ex-card{padding:28px 30px}
+  .ex-card h1{font-size:32px}
+  .ex-f2{grid-template-columns:1.6fr 1fr}
+  .ex-main{grid-template-columns:1fr 300px;align-items:start}
+  .ex-run .ex-pal,.ex-run .ex-pal.show{display:block;position:sticky;top:0;left:auto;right:auto;bottom:auto;box-shadow:none;max-height:none}
+  .ex-bnav{display:none}
+  .ex-q{padding:24px 26px}
+  .ex-qt{font-size:22px}
+  .ex-o{font-size:18px;padding:14px 16px}
+  .ex-brand b{font-size:18px}
+  .ex-clock{font-size:30px}
+  .ex-run .ex-who .ex-sub-btn{display:none}
+}
+html.ex-on #hud,html.ex-on #hudToggle{visibility:hidden}
+.m .slide .center>svg{max-width:100%;height:auto}
+.ex-pass[hidden],.ex-start label[hidden]{display:none}
+.m .cover h1[style]{font-size:62px!important;letter-spacing:-1.5px!important}
+
+</style>
+</head>
+<body>
+<div id="exam" class="open" role="main"></div>
+<script type="application/json" id="qbank-default">{"1": [{"id": "B1-001", "q": "Máy biến áp làm việc dựa trên hiện tượng nào?", "a": ["Nhiệt điện", "Quang điện", "Cảm ứng điện từ", "Điện phân"], "k": "C", "e": "Dòng xoay chiều ở sơ cấp tạo từ thông biến thiên trong lõi thép, từ thông này cảm ứng ra sức điện động ở cuộn thứ cấp."}, {"id": "B1-002", "q": "Lõi thép MBA được ghép từ các lá thép mỏng có sơn cách điện nhằm mục đích chính là gì?", "a": ["Dễ sơn màu", "Tăng khối lượng cho chắc", "Giảm tổn hao do dòng điện xoáy", "Tăng điện trở cuộn dây"], "k": "C", "e": "Ghép lá mỏng cách điện chia nhỏ dòng điện xoáy (Fu-cô), giảm tổn hao và giảm nóng lõi thép."}, {"id": "B1-003", "q": "MBA có U₁ = 220 V, N₁ = 1100 vòng, N₂ = 120 vòng. Điện áp thứ cấp U₂ bằng:", "a": ["12 V", "24 V", "36 V", "48 V"], "k": "B", "e": "U₂ = U₁·N₂/N₁ = 220 × 120 / 1100 = 24 V."}, {"id": "B1-004", "q": "Ở MBA giảm áp, cuộn dây nào có dòng điện lớn hơn và dây to hơn?", "a": ["Cuộn sơ cấp", "Không xác định được", "Cuộn thứ cấp", "Hai cuộn bằng nhau"], "k": "C", "e": "Dòng điện tỉ lệ nghịch với số vòng dây: thứ cấp ít vòng nên dòng lớn, phải dùng dây to."}, {"id": "B1-005", "q": "Cấp điện một chiều 220 V vào cuộn sơ cấp MBA 220 V thì điều gì xảy ra?", "a": ["Điện áp thứ cấp tăng gấp đôi", "MBA làm việc bình thường", "Thứ cấp cho ra điện một chiều", "Không có cảm ứng, dòng sơ cấp rất lớn, cuộn dây bị cháy"], "k": "D", "e": "Điện một chiều không tạo từ thông biến thiên nên không có cảm ứng; cuộn dây chỉ còn điện trở nhỏ nên dòng rất lớn và cháy."}, {"id": "B1-006", "q": "Với f = 50 Hz, B = 1 T, công thức tính số vòng cho 1 vôn theo tiết diện lõi S_{t} (cm²) là:", "a": ["n = 220 / S_{t}", "n = S_{t} / 45", "n = 45 / S_{t}", "n = 4,44 · S_{t}"], "k": "C", "e": "n = 1/(4,44·f·B·S_{t}·10⁻⁴) = 45/(B·S_{t}); với B = 1 T thì n = 45/S_{t}."}, {"id": "B1-007", "q": "Lõi thép có S_{t} = 10 cm², dùng n = 45/S_{t}. Số vòng cuộn sơ cấp 220 V là:", "a": ["450 vòng", "990 vòng", "220 vòng", "1100 vòng"], "k": "B", "e": "n = 45/10 = 4,5 vòng/V → N₁ = 4,5 × 220 = 990 vòng."}, {"id": "B1-008", "q": "Dòng điện 2 A, chọn mật độ dòng J = 2,5 A/mm². Tiết diện dây cần là:", "a": ["0,5 mm²", "0,8 mm²", "1,25 mm²", "5 mm²"], "k": "B", "e": "s = I/J = 2/2,5 = 0,8 mm²."}, {"id": "B1-009", "q": "Lá thép E – I tiêu chuẩn có trụ giữa rộng a. Chiều rộng cửa sổ c bằng:", "a": ["1,5a", "a", "a/2", "2a"], "k": "C", "e": "Lá E – I tiêu chuẩn: c = a/2, h = 1,5a, tổng bề rộng 3a."}, {"id": "B1-010", "q": "Cách ghép lõi thép đúng cho MBA nguồn thông thường là:", "a": ["Ghép xen kẽ (so le) các lá E và I", "Chỉ dùng lá E, không cần lá I", "Ghép tất cả lá E về một phía", "Để hở khe lớn giữa E và I"], "k": "A", "e": "Ghép xen kẽ làm khe hở không khí rất nhỏ, dòng không tải nhỏ, MBA ít kêu ù."}, {"id": "B1-011", "q": "Việc KHÔNG được làm với máy biến dòng khi sơ cấp đang có dòng điện là:", "a": ["Để hở mạch thứ cấp", "Nối tắt thứ cấp", "Nối đất một đầu thứ cấp", "Nối ampe kế vào thứ cấp"], "k": "A", "e": "Hở mạch thứ cấp làm điện áp thứ cấp tăng rất cao, gây nguy hiểm và cháy máy biến dòng."}, {"id": "B1-012", "q": "Đặc điểm của máy biến áp hàn là:", "a": ["Điện áp không tải 380 V", "Dòng thứ cấp rất nhỏ", "Điện áp không tải 60–80 V, dòng hàn lớn, chịu được ngắn mạch", "Không cần lõi thép"], "k": "C", "e": "MBA hàn có đặc tính ngoài dốc: U₀ khoảng 60–80 V, khi hàn điện áp giảm, dòng lớn và chịu được chập que hàn."}, {"id": "B1-013", "q": "MBA không tải mà nóng nhanh, dòng không tải lớn bất thường, có mùi khét. Nguyên nhân có thể là:", "a": ["Đứt cuộn thứ cấp", "Chập vòng dây", "Thiếu tải", "Dây nguồn quá dài"], "k": "B", "e": "Các vòng dây chập tạo thành vòng ngắn mạch, dòng lớn, MBA nóng nhanh và bốc mùi khét."}, {"id": "B1-014", "q": "Dụng cụ dùng để đo điện trở cách điện của MBA là:", "a": ["Thước cặp", "Ampe kìm", "Mêgôm mét", "Tần số kế"], "k": "C", "e": "Mêgôm mét dùng điện áp 500 V (hoặc cao hơn) để đo điện trở cách điện; yêu cầu ≥ 0,5 MΩ."}], "2": [{"id": "B2-001", "q": "Động cơ KĐB một pha chỉ có một cuộn dây không tự khởi động được vì:", "a": ["Điện áp quá thấp", "Thiếu dầu bôi trơn", "Rôto quá nặng", "Từ trường đập mạch, không quay"], "k": "D", "e": "Một cuộn dây tạo từ trường đập mạch = 2 từ trường quay ngược chiều bằng nhau → mômen tổng bằng 0 khi đứng yên."}, {"id": "B2-002", "q": "Rôto của động cơ KĐB một pha thông dụng là loại:", "a": ["Nam châm vĩnh cửu", "Rôto lồng sóc", "Rôto có chổi than", "Rôto dây quấn có vành trượt"], "k": "B", "e": "Động cơ KĐB 1 pha thông dụng dùng rôto lồng sóc: chắc chắn, đơn giản, rẻ."}, {"id": "B2-003", "q": "Động cơ vòng ngắn mạch quay theo chiều nào?", "a": ["Từ phần cực có vòng ngắn mạch sang phần không có", "Ngẫu nhiên mỗi lần đóng điện", "Từ phần cực không có vòng ngắn mạch sang phần có vòng ngắn mạch", "Tùy cách đấu dây nguồn"], "k": "C", "e": "Từ thông phần có vòng chậm pha nên từ trường dịch chuyển từ phần không có vòng sang phần có vòng."}, {"id": "B2-004", "q": "Muốn đảo chiều quay động cơ vòng ngắn mạch, ta:", "a": ["Tăng điện áp nguồn", "Đảo 2 dây nguồn", "Mắc thêm tụ điện", "Lật ngược stato để đổi phía vòng ngắn mạch"], "k": "D", "e": "Chiều quay do vị trí vòng ngắn mạch quyết định; đảo dây nguồn không làm đổi chiều."}, {"id": "B2-005", "q": "Ứng dụng phổ biến của động cơ vòng ngắn mạch là:", "a": ["Quạt nhỏ: quạt dàn tủ lạnh, quạt hút", "Máy tiện", "Bơm giếng khoan lớn", "Máy nén điều hòa 2 HP"], "k": "A", "e": "Động cơ vòng ngắn mạch có mômen mở máy nhỏ, hiệu suất thấp, chỉ hợp với tải nhẹ như quạt nhỏ."}, {"id": "B2-006", "q": "Trong động cơ tụ điện, tụ được mắc:", "a": ["Nối tiếp với cuộn chính", "Song song với nguồn", "Nối với vỏ máy", "Nối tiếp với cuộn phụ (cuộn đề)"], "k": "D", "e": "Tụ nối tiếp cuộn phụ làm dòng cuộn phụ lệch pha so với cuộn chính để tạo từ trường quay."}, {"id": "B2-007", "q": "Máy nén có 3 chân. Đo được: 1–2 = 3 Ω; 2–3 = 5 Ω; 1–3 = 8 Ω. Chân C (chung) là:", "a": ["Chân 1", "Chân 2", "Chân 3", "Không xác định được"], "k": "B", "e": "Cặp lớn nhất 1–3 = 8 Ω là R–S, chân còn lại (2) là C."}, {"id": "B2-008", "q": "Cũng với số liệu trên (1–2 = 3 Ω; 2–3 = 5 Ω; 1–3 = 8 Ω), chân S (cuộn đề) là:", "a": ["Chân 1", "Chân 2", "Chân 3", "Chân 1 hoặc 3"], "k": "C", "e": "Từ C (chân 2): đến chân 1 = 3 Ω (nhỏ → R), đến chân 3 = 5 Ω (lớn → S)."}, {"id": "B2-009", "q": "Muốn đảo chiều quay động cơ tụ điện, ta:", "a": ["Đảo hai dây nguồn L – N", "Đảo hai đầu cuộn phụ (hoặc hai đầu cuộn chính)", "Đảo cả hai cuộn", "Thay tụ lớn hơn"], "k": "B", "e": "Đảo một trong hai cuộn làm đổi chiều từ trường quay; đảo cả hai hoặc đảo nguồn thì chiều quay không đổi."}, {"id": "B2-010", "q": "Quạt cấp điện chỉ kêu ù, không quay, lấy tay đẩy thì quay. Nguyên nhân thường gặp nhất:", "a": ["Cháy cầu chì", "Tụ điện bị khô hoặc đứt", "Đứt dây nguồn", "Mất điện"], "k": "B", "e": "Không có tụ thì không có từ trường quay để khởi động; mồi tay thì động cơ quay được."}, {"id": "B2-011", "q": "Công tắc ly tâm trong động cơ tụ khởi động có nhiệm vụ:", "a": ["Bảo vệ quá áp", "Cắt cuộn phụ và tụ khởi động khi tốc độ đạt khoảng 75–80% định mức", "Tăng tốc độ", "Đảo chiều quay"], "k": "B", "e": "Sau khi khởi động xong, cuộn phụ và tụ khởi động được cắt ra để không bị quá nóng."}, {"id": "B2-012", "q": "Quạt 3 tốc độ thay đổi tốc độ chủ yếu nhờ:", "a": ["Thay đổi tần số lưới điện", "Thay đổi số cực", "Cuộn số nối tiếp làm giảm điện áp đặt lên cuộn chính và cuộn phụ", "Thay tụ khác cho mỗi số"], "k": "C", "e": "Dòng đi qua càng nhiều đoạn cuộn số thì điện áp đặt lên động cơ càng giảm, tốc độ càng chậm."}, {"id": "B2-013", "q": "Tốc độ từ trường quay của động cơ 4 cực, f = 50 Hz là:", "a": ["3000 vòng/phút", "1500 vòng/phút", "1000 vòng/phút", "750 vòng/phút"], "k": "B", "e": "n₁ = 60·f/p = 60 × 50 / 2 = 1500 vòng/phút."}, {"id": "B2-014", "q": "Trước khi đo kiểm tụ điện của động cơ, việc đầu tiên phải làm là:", "a": ["Hơ nóng tụ", "Xả hết điện tích trong tụ", "Cấp điện cho tụ", "Nối tụ với vỏ máy"], "k": "B", "e": "Tụ còn tích điện có thể gây giật và làm hỏng đồng hồ đo."}, {"id": "B2-015", "q": "Rơle PTC trong tủ lạnh được mắc nối tiếp với:", "a": ["Cuộn chạy (R)", "Cuộn đề (S)", "Bảo vệ quá tải ở chân C", "Thermostat"], "k": "B", "e": "PTC nguội có điện trở nhỏ cho dòng qua cuộn đề; nóng lên thì điện trở rất lớn, gần như ngắt cuộn đề."}], "3": [{"id": "B3-001", "q": "Bộ phận tạo ra từ trường quay trong động cơ KĐB 3 pha là:", "a": ["Ổ bi", "Dây quấn stato 3 pha", "Lồng sóc rôto", "Quạt làm mát"], "k": "B", "e": "Ba cuộn dây stato lệch 120° được cấp dòng 3 pha tạo ra từ trường quay."}, {"id": "B3-002", "q": "Lõi thép stato được làm bằng:", "a": ["Lá thép kỹ thuật điện ghép, cách điện với nhau", "Nhôm nguyên khối", "Đồng", "Gang đúc nguyên khối"], "k": "A", "e": "Ghép lá thép kỹ thuật điện để giảm tổn hao dòng xoáy và từ trễ."}, {"id": "B3-003", "q": "Động cơ 2p = 4, f = 50 Hz có tốc độ từ trường quay n₁ là:", "a": ["3000 vòng/phút", "1500 vòng/phút", "1000 vòng/phút", "750 vòng/phút"], "k": "B", "e": "n₁ = 60·50/2 = 1500 vòng/phút."}, {"id": "B3-004", "q": "Động cơ 4 cực quay 1440 vòng/phút (f = 50 Hz). Hệ số trượt s bằng:", "a": ["2%", "4%", "6%", "40%"], "k": "B", "e": "s = (1500 − 1440)/1500 = 0,04 = 4%."}, {"id": "B3-005", "q": "Muốn đảo chiều quay động cơ KĐB 3 pha, ta:", "a": ["Đảo 2 trong 3 dây pha nguồn", "Đảo dây trung tính", "Đảo cả 3 dây pha", "Đổi từ Y sang Δ"], "k": "A", "e": "Đảo 2 pha làm đổi thứ tự pha nên từ trường quay ngược lại."}, {"id": "B3-006", "q": "Động cơ ghi Δ/Y – 220/380 V, lưới 3 pha 380 V thì phải đấu:", "a": ["Hình sao (Y)", "Hình tam giác (Δ)", "Nối tiếp các cuộn", "Tùy ý"], "k": "A", "e": "Đấu Y mỗi cuộn chịu 380/√3 = 220 V, đúng điện áp định mức của cuộn dây."}, {"id": "B3-007", "q": "Ở hộp đấu dây, đấu sao (Y) được thực hiện bằng cách:", "a": ["Nối U1–W2, V1–U2, W1–V2", "Nối U1 với U2", "Nối chung 3 đầu W2, U2, V2; cấp nguồn vào U1, V1, W1", "Nối chung cả 6 đầu"], "k": "C", "e": "Ba đầu cuối nối chung tạo điểm trung tính của hình sao."}, {"id": "B3-008", "q": "Động cơ 3 pha đóng điện chỉ kêu ù, không quay. Nguyên nhân thường gặp nhất là:", "a": ["Điện áp hơi cao", "Mất 1 pha nguồn", "Ổ bi mới thay", "Quạt làm mát lỏng"], "k": "B", "e": "Mất 1 pha thì từ trường không quay (đập mạch), động cơ không tự khởi động được và rất nhanh nóng."}, {"id": "B3-009", "q": "Phương pháp điều chỉnh tốc độ động cơ lồng sóc trơn, tiết kiệm điện, dùng trong máy nén inverter là:", "a": ["Đảo chiều quay", "Thay puli", "Thêm điện trở vào rôto", "Thay đổi tần số bằng biến tần"], "k": "D", "e": "Biến tần thay đổi f → thay đổi n₁ = 60f/p, điều chỉnh tốc độ trơn trong phạm vi rộng."}, {"id": "B3-010", "q": "Z = 24 rãnh, 2p = 4, m = 3. Số rãnh dưới 1 cực của 1 pha q bằng:", "a": ["1", "2", "3", "4"], "k": "B", "e": "q = Z/(2p·m) = 24/(4 × 3) = 2."}, {"id": "B3-011", "q": "Z = 24 rãnh, 2p = 4. Bước cực τ bằng:", "a": ["4 rãnh", "6 rãnh", "8 rãnh", "12 rãnh"], "k": "B", "e": "τ = Z/2p = 24/4 = 6 rãnh."}, {"id": "B3-012", "q": "Z = 24 rãnh, 2p = 4. Khoảng cách giữa đầu các pha λ bằng:", "a": ["2 rãnh", "4 rãnh", "6 rãnh", "8 rãnh"], "k": "B", "e": "α = p·360°/Z = 30°; λ = 120°/30° = 4 rãnh."}, {"id": "B3-013", "q": "Đặc điểm của bộ dây xếp đơn là:", "a": ["Các bối dây có kích thước giống nhau", "Không cần làm khuôn", "Chỉ dùng cho máy biến áp", "Các bối lồng vào nhau, kích thước khác nhau"], "k": "A", "e": "Xếp đơn: các bối cùng bước y = τ nên giống nhau, chỉ cần 1 cỡ khuôn."}, {"id": "B3-014", "q": "Điện trở cách điện tối thiểu của bộ dây động cơ hạ áp sau khi quấn là:", "a": ["≥ 5 Ω", "≥ 0,5 Ω", "Bằng 0", "≥ 0,5 MΩ"], "k": "D", "e": "Đo bằng mêgôm mét 500 V, bộ dây đạt khi cách điện từ 0,5 MΩ trở lên."}, {"id": "B3-015", "q": "Thử bộ dây bằng viên bi thép: viên bi lăn tròn đều trong lòng stato chứng tỏ:", "a": ["Điện áp quá cao", "Bộ dây đấu đúng, tạo được từ trường quay", "Mất một pha", "Bộ dây chạm vỏ"], "k": "B", "e": "Từ trường quay kéo viên bi lăn tròn; nếu đấu sai, bi đứng yên hoặc lăn giật cục."}]}</script>
+<script>
+/* Kết nối Google Sheet (Apps Script Web App) – dùng chung cho bài giảng và trang thi */
+(function(){
+"use strict";
+const CFG=window.MD14_CONFIG=window.MD14_CONFIG||{};
+function apiUrl(){let u=(CFG.API_URL||'').trim();if(!u){try{u=(localStorage.getItem('md14_api')||'').replace(/"/g,'');}catch(e){}}return u;}
+function qs(o){return Object.keys(o).filter(k=>o[k]!==undefined&&o[k]!==null).map(k=>encodeURIComponent(k)+'='+encodeURIComponent(o[k])).join('&');}
+function withTimeout(p,ms){return new Promise((res,rej)=>{const t=setTimeout(()=>rej(new Error('timeout')),ms);p.then(v=>{clearTimeout(t);res(v);},e=>{clearTimeout(t);rej(e);});});}
+let seq=0;
+function jsonp(url,params,ms){return new Promise((res,rej)=>{const cb='__md14cb'+(Date.now()%1e7)+'_'+(seq++);const s=document.createElement('script');
+  const done=(fn,v)=>{try{delete window[cb];}catch(e){window[cb]=undefined;}s.remove();clearTimeout(t);fn(v);};
+  window[cb]=d=>done(res,d);s.onerror=()=>done(rej,new Error('jsonp'));const t=setTimeout(()=>done(rej,new Error('timeout')),ms||20000);
+  s.src=url+(url.indexOf('?')<0?'?':'&')+qs(Object.assign({},params,{callback:cb}));document.head.appendChild(s);});}
+async function get(params,ms){const url=apiUrl();if(!url)throw new Error('noapi');
+  try{const r=await withTimeout(fetch(url+(url.indexOf('?')<0?'?':'&')+qs(params),{redirect:'follow'}),ms||15000);if(!r.ok)throw new Error('http '+r.status);return await r.json();}
+  catch(e){if(e.message==='noapi')throw e;return jsonp(url,params,ms||20000);}}
+async function post(body,ms){const url=apiUrl();if(!url)throw new Error('noapi');
+  try{const r=await withTimeout(fetch(url,{method:'POST',body:JSON.stringify(body),redirect:'follow'}),ms||30000);if(!r.ok)throw new Error('http '+r.status);return await r.json();}
+  catch(e){const p={action:body.action};if(body.action==='submit')p.data=JSON.stringify(body);else Object.assign(p,body);return jsonp(url,p,ms||30000);}}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+/* Định dạng chữ từ Google Sheet: _{x} chỉ số dưới, ^{x} số mũ, **x** in đậm, xuống dòng */
+function fmt(s){return esc(s).replace(/_\{([^}]*)\}/g,'<sub>$1</sub>').replace(/\^\{([^}]*)\}/g,'<sup>$1</sup>').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\r?\n/g,'<br>');}
+function safeUrl(u){u=String(u||'').trim();if(!/^https?:\/\//i.test(u))return '';
+  const m=u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=)([\w-]{20,})/);if(m)return 'https://drive.google.com/thumbnail?id='+m[1]+'&sz=w1000';return u;}
+window.MD14API={url:apiUrl,get,post,esc,fmt,safeUrl,has:()=>!!apiUrl()};
+})();
+
+</script>
+<script>
+/* ============ CHƯƠNG TRÌNH THI ĐÁNH GIÁ – MĐ 14 MÁY ĐIỆN ============ */
+(function(){
+"use strict";
+const A=window.MD14API;
+const $=(s,r)=>(r||document).querySelector(s),$$=(s,r)=>Array.from((r||document).querySelectorAll(s));
+const S={get(k,d){try{const v=localStorage.getItem('md14_'+k);return v==null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem('md14_'+k,JSON.stringify(v));}catch(e){}},del(k){try{localStorage.removeItem('md14_'+k);}catch(e){}}};
+const esc=A.esc,fmt=A.fmt;
+const PRACTICE=[{code:'LT1',name:'Luyện tập Bài 1 – Máy biến áp',n:[10,0,0],minutes:15},{code:'LT2',name:'Luyện tập Bài 2 – Động cơ một pha',n:[0,10,0],minutes:15},
+  {code:'LT3',name:'Luyện tập Bài 3 – Động cơ ba pha',n:[0,0,10],minutes:15},{code:'LTT',name:'Luyện tập tổng hợp cả mô đun',n:[7,7,6],minutes:25}];
+let root,body,st=null,tick=null,exams=null,sel=null,standalone=false,retryT=null,warned={};
+function localBank(){if(window.MD&&MD.bank)return MD.bank;try{return JSON.parse(document.getElementById('qbank-default').textContent);}catch(e){return {'1':[],'2':[],'3':[]};}}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function beep(t){if(window.MD&&MD.beep)MD.beep(t);}
+
+/* ---------------- khung ---------------- */
+function mount(){if(root)return;root=document.getElementById('exam');
+  root.innerHTML='<div class="ex-bar"><div class="ex-brand"><svg viewBox="0 0 40 40" width="34" height="34"><rect x="12" y="4" width="16" height="32" rx="3" fill="#8a9aa8"/><g stroke="#e3925a" stroke-width="3.4" stroke-linecap="round"><path d="M6 11L34 8M6 18L34 15M6 25L34 22M6 32L34 29"/></g></svg><div><b>Thi đánh giá – MĐ 14 Máy điện</b><span>Tác giả: Huỳnh Hào Kiệt - Trường Trung cấp nghề Diên Khánh</span></div></div>'+
+    '<div class="ex-clock" hidden></div><button class="ex-x" aria-label="Đóng" title="Đóng">×</button></div><div class="ex-body"></div><div class="ex-modal" hidden></div><div class="ex-toast" hidden></div>';
+  body=$('.ex-body',root);$('.ex-x',root).onclick=close;if(standalone)$('.ex-x',root).hidden=true;
+  document.addEventListener('visibilitychange',()=>{if(!st||st.done)return;if(document.hidden){st.leave=(st.leave||0)+1;save();}else toast('Em đã rời khỏi màn hình thi '+st.leave+' lần. Số lần này được gửi cho giáo viên.',4500);});
+  document.addEventListener('keydown',e=>{if(!root.classList.contains('open')||!st||st.done||$('.ex-modal',root).hidden===false)return;if(/INPUT|TEXTAREA|SELECT/.test((e.target||{}).tagName||''))return;
+    const m={'1':0,'2':1,'3':2,'4':3,a:0,b:1,c:2,d:3}[e.key.toLowerCase()];if(m!==undefined){const o=$$('.ex-o',body)[m];o&&o.click();e.preventDefault();e.stopPropagation();}
+    else if(e.key==='ArrowRight'){go(st.i+1);e.preventDefault();e.stopPropagation();}else if(e.key==='ArrowLeft'){go(st.i-1);e.preventDefault();e.stopPropagation();}},true);}
+function toast(m,ms){const t=$('.ex-toast',root);t.innerHTML=m;t.hidden=false;clearTimeout(t._t);t._t=setTimeout(()=>t.hidden=true,ms||3000);}
+function modal(html){const m=$('.ex-modal',root);m.innerHTML='<div class="ex-mbox">'+html+'</div>';m.hidden=false;return m;}
+function unmodal(){$('.ex-modal',root).hidden=true;}
+function clock(on){const c=$('.ex-clock',root);c.hidden=!on;}
+
+function open(code,opts){opts=opts||{};standalone=!!opts.standalone;mount();root.classList.add('open');document.documentElement.classList.add('ex-on');
+  const run=S.get('exam_run',null),pend=S.get('exam_pending',null);
+  if(pend){showPending(pend);return;}
+  if(run&&!run.done){st=run;if(Date.now()>st.deadline+30000){toast('Bài thi trước đã hết giờ – hệ thống tự nộp.');submit(true);}else{renderRun();startTick();toast('Tiếp tục bài thi đang làm dở.');}return;}
+  st=null;sel=code||null;renderStart();}
+function close(){if(st&&!st.done){const m=modal('<h3>Đang làm bài thi</h3><p>Bài làm được lưu trên máy này, đồng hồ vẫn tiếp tục chạy. Em có chắc muốn thoát?</p><div class="ex-row"><button class="ex-btn" data-a="stay">Làm tiếp</button><button class="ex-btn warn" data-a="out">Vẫn thoát</button></div>');
+    m.onclick=e=>{const a=e.target.dataset.a;if(a==='stay')unmodal();if(a==='out'){unmodal();hide();}};return;}hide();}
+function hide(){root.classList.remove('open');document.documentElement.classList.remove('ex-on');clearInterval(tick);}
+
+/* ---------------- màn hình bắt đầu ---------------- */
+function renderStart(){clock(false);const stu=S.get('stu',{name:'',lop:''});const online=A.has();
+  body.innerHTML='<div class="ex-wrap"><div class="ex-card ex-start"><h1>Thi đánh giá kiến thức</h1><p class="ex-sub">Mô đun MĐ 14 – Máy điện. Nghề Kỹ thuật máy lạnh và điều hòa không khí.</p>'+
+   (online?'':'<div class="ex-note warn"><b>Chế độ luyện tập:</b> bài giảng chưa kết nối Google Sheet của giáo viên nên kết quả <b>không được gửi đi</b>. Đề lấy từ câu hỏi trong slide.</div>')+
+   '<div class="ex-f2"><label>Họ và tên<input id="exName" autocomplete="name" maxlength="60" placeholder="Ví dụ: Nguyễn Văn An" value="'+esc(stu.name)+'"></label><label>Lớp<input id="exLop" maxlength="30" placeholder="Ví dụ: MLĐ K12" value="'+esc(stu.lop)+'"></label></div>'+
+   '<div class="ex-lbl">Chọn đề thi</div><div class="ex-list"><div class="ex-wait">Đang tải danh sách đề thi…</div></div>'+
+   '<label class="ex-pass" hidden>Mật khẩu đề (giáo viên cung cấp)<input id="exPass" maxlength="30" autocomplete="off"></label>'+
+   '<ul class="ex-rules"><li>Mỗi câu chỉ có <b>một</b> đáp án đúng; có thể đổi đáp án trước khi nộp.</li><li>Hết giờ, bài làm <b>tự động nộp</b>.</li><li>Không thoát khỏi trang thi; số lần rời màn hình được ghi lại.</li><li>Nếu mất mạng, bài làm vẫn được giữ trên máy – nộp lại khi có mạng.</li></ul>'+
+   '<div class="ex-err" role="alert"></div><button class="ex-btn pri big" id="exGo">Bắt đầu làm bài</button></div></div>';
+  $('#exGo',body).onclick=begin;
+  if(!online){exams=PRACTICE.map(x=>Object.assign({total:x.n.reduce((a,b)=>a+b,0),open:true,review:true,local:true},x));drawList();return;}
+  A.get({action:'exams'}).then(r=>{if(!r||!r.ok)throw new Error(r&&r.error||'Lỗi tải đề');exams=r.exams||[];drawList();})
+   .catch(()=>{$('.ex-list',body).innerHTML='<div class="ex-note bad">Không tải được danh sách đề thi. Kiểm tra kết nối mạng rồi <button class="ex-link" id="exRe">thử lại</button>.</div>';$('#exRe',body).onclick=renderStart;});}
+function drawList(){const L=$('.ex-list',body);if(!exams.length){L.innerHTML='<div class="ex-note">Chưa có đề thi nào. Giáo viên thêm đề ở trang tính CauHinhDeThi.</div>';return;}
+  if(!sel||!exams.some(x=>x.code===sel&&x.open)){const o=exams.find(x=>x.open);sel=o?o.code:null;}
+  L.innerHTML=exams.map(x=>'<button class="ex-opt'+(x.code===sel?' on':'')+'" data-c="'+esc(x.code)+'"'+(x.open?'':' disabled')+'><b>'+esc(x.name)+'</b><span>'+x.total+' câu – '+x.minutes+' phút'+(x.maxTry?' – tối đa '+x.maxTry+' lần':'')+'</span><i class="'+(x.open?'op':'cl')+'">'+(x.open?'Đang mở':'Đã đóng')+'</i></button>').join('');
+  $$('.ex-opt',L).forEach(b=>b.onclick=()=>{sel=b.dataset.c;$$('.ex-opt',L).forEach(x=>x.classList.toggle('on',x===b));passBox();});passBox();}
+function passBox(){const x=exams&&exams.find(e=>e.code===sel);const p=$('.ex-pass',body);if(p)p.hidden=!(x&&x.needPass);}
+function err(m){const e=$('.ex-err',body);if(e)e.innerHTML=m?esc(m):'';}
+function begin(){const name=$('#exName',body).value.replace(/\s+/g,' ').trim(),lop=$('#exLop',body).value.replace(/\s+/g,' ').trim();
+  if(name.split(' ').length<2){err('Em hãy nhập đầy đủ họ và tên (ít nhất 2 từ).');$('#exName',body).focus();return;}
+  if(!lop){err('Em hãy nhập tên lớp.');$('#exLop',body).focus();return;}
+  const x=exams&&exams.find(e=>e.code===sel);if(!x){err('Em hãy chọn một đề thi đang mở.');return;}
+  S.set('stu',{name,lop});err('');const btn=$('#exGo',body);btn.disabled=true;btn.textContent='Đang tạo đề thi…';
+  if(x.local){const bank=localBank();let qs=[];[0,1,2].forEach(i=>{qs=qs.concat(shuffle(bank[String(i+1)]||[]).slice(0,x.n[i]));});qs=shuffle(qs);
+    const key={},exp={};const q2=qs.map((q,i)=>{const id=q.id||('L'+i);key[id]=q.k;exp[id]=q.e;return {id,q:q.q,img:q.img,o:shuffle(q.a.map((t,j)=>({k:'ABCD'[j],t})).filter(o=>o.t))};});
+    launch({token:null,local:true,key,exp,exam:{code:x.code,name:x.name,minutes:x.minutes,review:true},qs:q2,name,lop});return;}
+  A.post({action:'start',code:x.code,name,lop,pass:($('#exPass',body)||{}).value||''},30000).then(r=>{if(!r||!r.ok)throw new Error(r&&r.error||'Không tạo được đề thi.');launch(Object.assign(r,{name,lop}));})
+   .catch(e=>{btn.disabled=false;btn.textContent='Bắt đầu làm bài';err(e.message==='timeout'||/fetch|jsonp|http/i.test(e.message)?'Không kết nối được máy chủ. Kiểm tra mạng và thử lại.':e.message);});}
+function launch(r){st={token:r.token,local:!!r.local,key:r.key||null,exp:r.exp||null,exam:r.exam,qs:r.qs,name:r.name,lop:r.lop,ans:{},flag:{},i:0,leave:0,
+    start:Date.now(),deadline:Date.now()+r.exam.minutes*60000,done:false};warned={};save();renderRun();startTick();beep('ok');}
+function save(){if(st)S.set('exam_run',st);}
+
+/* ---------------- làm bài ---------------- */
+function renderRun(){clock(true);const n=st.qs.length;
+  body.innerHTML='<div class="ex-run"><div class="ex-who"><div><b>'+esc(st.name)+'</b> – '+esc(st.lop)+'<span>'+esc(st.exam.name)+'</span></div><button class="ex-btn pri ex-sub-btn">Nộp bài</button></div>'+
+   '<div class="ex-prog"><i></i></div><div class="ex-main"><section class="ex-q" aria-live="polite"></section>'+
+   '<aside class="ex-pal"><div class="ex-pal-h"><b>Danh sách câu</b><span class="ex-cnt"></span></div><div class="ex-grid">'+st.qs.map((q,i)=>'<button data-i="'+i+'">'+(i+1)+'</button>').join('')+'</div>'+
+   '<div class="ex-legend"><span><i class="a"></i>Đã làm</span><span><i class="f"></i>Đánh dấu</span><span><i></i>Chưa làm</span></div><button class="ex-btn pri ex-sub-btn wide">Nộp bài</button></aside></div>'+
+   '<nav class="ex-bnav"><button class="ex-btn" data-nav="-1" aria-label="Câu trước">‹ Trước</button><button class="ex-btn ex-palbtn"><span class="ex-cnt"></span></button><button class="ex-btn" data-nav="1" aria-label="Câu sau">Sau ›</button></nav></div>';
+  $$('.ex-grid button',body).forEach(b=>b.onclick=()=>{go(+b.dataset.i);body.querySelector('.ex-pal').classList.remove('show');});
+  $$('[data-nav]',body).forEach(b=>b.onclick=()=>go(st.i+ +b.dataset.nav));
+  $$('.ex-sub-btn',body).forEach(b=>b.onclick=confirmSubmit);
+  $('.ex-palbtn',body).onclick=()=>body.querySelector('.ex-pal').classList.toggle('show');
+  drawQ();drawPal();updClock();}
+function go(i){if(i<0||i>=st.qs.length)return;st.i=i;save();drawQ();drawPal();const q=$('.ex-q',body);q.classList.remove('in');void q.offsetWidth;q.classList.add('in');
+  try{(body.querySelector('.ex-run')||body).scrollIntoView({block:'start'});}catch(e){}}
+function drawQ(){const q=st.qs[st.i],n=st.qs.length,img=A.safeUrl(q.img);
+  $('.ex-q',body).innerHTML='<div class="ex-qn">Câu '+(st.i+1)+' / '+n+'<button class="ex-flag'+(st.flag[q.id]?' on':'')+'">'+(st.flag[q.id]?'Bỏ đánh dấu':'Đánh dấu xem lại')+'</button></div>'+
+    '<div class="ex-qt">'+fmt(q.q)+'</div>'+(img?'<img class="ex-img" src="'+esc(img)+'" alt="Hình minh họa câu hỏi" referrerpolicy="no-referrer">':'')+
+    '<div class="ex-os">'+q.o.map((o,j)=>'<button class="ex-o'+(st.ans[q.id]===o.k?' on':'')+'" data-k="'+o.k+'"><b>'+'ABCD'[j]+'</b><span>'+fmt(o.t)+'</span></button>').join('')+'</div>'+
+    '<div class="ex-nav"><button class="ex-btn" data-n="-1"'+(st.i?'':' disabled')+'>‹ Câu trước</button><button class="ex-btn'+(st.i<n-1?' pri':'')+'" data-n="1"'+(st.i<n-1?'':' disabled')+'>Câu sau ›</button></div>';
+  $$('.ex-o',body).forEach(b=>b.onclick=()=>{st.ans[q.id]=b.dataset.k;save();$$('.ex-o',body).forEach(x=>x.classList.toggle('on',x===b));drawPal();});
+  $('.ex-flag',body).onclick=()=>{st.flag[q.id]=!st.flag[q.id];save();drawQ();drawPal();};
+  $$('[data-n]',body).forEach(b=>b.onclick=()=>go(st.i+ +b.dataset.n));}
+function drawPal(){const n=st.qs.length,done=st.qs.filter(q=>st.ans[q.id]).length;
+  $$('.ex-grid button',body).forEach((b,i)=>{const q=st.qs[i];b.className=(st.ans[q.id]?'a ':'')+(st.flag[q.id]?'f ':'')+(i===st.i?'cur':'');});
+  $$('.ex-cnt',body).forEach(c=>c.textContent='Đã làm '+done+'/'+n);$('.ex-prog i',body).style.width=(done/n*100)+'%';}
+function startTick(){clearInterval(tick);tick=setInterval(updClock,500);}
+function updClock(){if(!st||st.done)return;const left=Math.max(0,st.deadline-Date.now()),s=Math.ceil(left/1000);const c=$('.ex-clock',root);
+  c.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');c.classList.toggle('low',s<=120);
+  if(s<=300&&s>290&&!warned[5]){warned[5]=1;toast('Còn 5 phút làm bài.');beep('tick');}
+  if(s<=60&&!warned[1]){warned[1]=1;toast('Còn 1 phút! Kiểm tra lại bài làm.');beep('end');}
+  if(left<=0){clearInterval(tick);toast('Hết giờ làm bài – hệ thống tự động nộp.',4000);submit(true);}}
+function confirmSubmit(){const n=st.qs.length,miss=st.qs.filter(q=>!st.ans[q.id]).length,fl=st.qs.filter(q=>st.flag[q.id]).length;
+  const m=modal('<h3>Nộp bài thi?</h3><p>Em đã làm <b>'+(n-miss)+'/'+n+'</b> câu.'+(miss?' Còn <b class="bad">'+miss+' câu chưa làm</b>.':'')+(fl?' Có '+fl+' câu đang đánh dấu xem lại.':'')+'</p><p class="ex-small">Sau khi nộp sẽ không sửa được bài.</p><div class="ex-row"><button class="ex-btn" data-a="back">Làm tiếp</button><button class="ex-btn pri" data-a="ok">Nộp bài</button></div>');
+  m.onclick=e=>{const a=e.target.dataset.a;if(a==='back')unmodal();if(a==='ok'){unmodal();submit(false);}};}
+
+/* ---------------- nộp bài, chấm điểm ---------------- */
+function submit(auto){if(!st||st.done)return;clearInterval(tick);st.done=true;save();clock(false);
+  if(st.local){const r={ok:true,local:true,right:0,total:st.qs.length,review:{}};st.qs.forEach(q=>{const ok=st.ans[q.id]===st.key[q.id];if(ok)r.right++;r.review[q.id]={k:st.key[q.id],e:st.exp[q.id]};});
+    r.score=Math.round(r.right/r.total*1000)/100;r.used=fmtUsed(Date.now()-st.start);finish(r);return;}
+  const payload={action:'submit',token:st.token,answers:st.ans,leave:st.leave||0,auto:!!auto};
+  S.set('exam_pending',{payload,st});S.del('exam_run');send(payload);}
+function send(payload){body.innerHTML='<div class="ex-wrap"><div class="ex-card ex-center"><div class="ex-spin"></div><h2>Đang chấm bài và gửi kết quả…</h2><p>Em đừng đóng trang này.</p></div></div>';
+  A.post(payload,40000).then(r=>{if(!r||!r.ok)throw new Error(r&&r.error||'Lỗi máy chủ');S.del('exam_pending');finish(r);})
+   .catch(e=>{const p=S.get('exam_pending',null);showPending(p,e&&e.message);});}
+function showPending(p,msg){if(!p){renderStart();return;}st=p.st;clock(false);
+  body.innerHTML='<div class="ex-wrap"><div class="ex-card ex-center"><h2>Chưa gửi được kết quả</h2><p>Bài làm của <b>'+esc(st.name)+'</b> vẫn được lưu an toàn trên máy này. '+(msg&&!/fetch|jsonp|timeout|http/i.test(msg)?'<br><span class="bad">'+esc(msg)+'</span>':'Hãy kiểm tra kết nối mạng.')+'</p><button class="ex-btn pri big" id="exRetry">Gửi lại kết quả</button><p class="ex-small">Hệ thống tự thử gửi lại sau mỗi 15 giây.</p></div></div>';
+  $('#exRetry',body).onclick=()=>{clearTimeout(retryT);send(p.payload);};clearTimeout(retryT);retryT=setTimeout(()=>{if($('#exRetry',body))send(p.payload);},15000);}
+function fmtUsed(ms){const s=Math.round(ms/1000);return Math.floor(s/60)+' phút '+(s%60)+' giây';}
+function finish(r){clearTimeout(retryT);S.del('exam_run');const sc=+r.score,pct=r.total?r.right/r.total:0;beep(sc>=5?'ok':'no');
+  const msg=sc>=9?'Xuất sắc!':sc>=8?'Giỏi!':sc>=6.5?'Khá tốt!':sc>=5?'Đạt yêu cầu.':'Chưa đạt – cần ôn tập thêm.';
+  let rev='';if(r.review){rev='<h3 class="ex-rh">Xem lại bài làm</h3>'+st.qs.map((q,i)=>{const R=r.review[q.id]||{},your=st.ans[q.id];const ok=your&&your===R.k;
+    return '<div class="ex-rv '+(ok?'ok':'no')+'"><div class="ex-rq"><b>Câu '+(i+1)+'.</b> '+fmt(q.q)+'</div><ul>'+q.o.map((o,j)=>'<li class="'+(o.k===R.k?'k ':'')+(o.k===your&&!ok?'y':'')+'"><b>'+'ABCD'[j]+'</b> '+fmt(o.t)+(o.k===your?' <em>(em chọn)</em>':'')+'</li>').join('')+'</ul>'+(your?'':'<p class="bad ex-small">Em chưa trả lời câu này.</p>')+(R.e?'<p class="ex-ex">'+fmt(R.e)+'</p>':'')+'</div>';}).join('');}
+  body.innerHTML='<div class="ex-wrap"><div class="ex-card ex-res"><div class="ex-ring" style="--p:'+(pct*100).toFixed(1)+'"><div><b>'+String(sc).replace('.',',')+'</b><span>điểm</span></div></div>'+
+    '<h2>'+msg+'</h2><p><b>'+esc(st.name)+'</b> – '+esc(st.lop)+'<br>'+esc(st.exam.name)+'</p><div class="ex-stats"><div><b>'+r.right+'/'+r.total+'</b><span>câu đúng</span></div><div><b>'+esc(r.used||'')+'</b><span>thời gian làm bài</span></div></div>'+
+    (r.local?'<div class="ex-note warn">Bài luyện tập – kết quả không gửi cho giáo viên.</div>':'<div class="ex-note ok">Đã lưu kết quả vào Google Sheet của giáo viên.</div>')+
+    '<div class="ex-row c"><button class="ex-btn pri" id="exAgain">Làm đề khác</button>'+(standalone?'':'<button class="ex-btn" id="exBack">Về bài giảng</button>')+'</div></div>'+(rev?'<div class="ex-card">'+rev+'</div>':'')+'</div>';
+  $('#exAgain',body).onclick=()=>{st=null;renderStart();};const b=$('#exBack',body);b&&(b.onclick=()=>{st=null;hide();});try{body.scrollTop=0;root.scrollTop=0;}catch(e){}}
+
+const API={open,close:hide};window.MD14Exam=API;if(window.MD)window.MD.exam=API;
+})();
+
+</script>
+<script>MD14Exam.open(null,{standalone:true});</script>
+</body>
+</html>
